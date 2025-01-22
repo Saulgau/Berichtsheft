@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Berichtsheft</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --background: #121212;
+            --card-bg: #1E1E1E;
+            --border: #333333;
+            --text: #FFFFFF;
+            --text-secondary: #A0A0A0;
+            --primary: #3B82F6;
+            --primary-hover: #2563EB;
+            --success: #059669;
+            --danger: #DC2626;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .input-field {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            width: 100%;
+            transition: border-color 0.2s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .entry-card {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .entry-card:active {
+            transform: scale(0.98);
+        }
+
+        .entry-card.delete-mode {
+            background-color: rgba(220, 38, 38, 0.1);
+            border: 2px solid var(--danger);
+        }
+
+        /* Menü Styles */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .menu-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .menu-content {
+            position: absolute;
+            top: 3rem;
+            right: 1rem;
+            background-color: var(--card-bg);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-width: 200px;
+            transform: scale(0.95);
+            opacity: 0;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .menu-overlay.active .menu-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .menu-item {
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text);
+            transition: background-color 0.2s;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-item:first-child {
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+        }
+
+        .menu-item:last-child {
+            border-bottom-left-radius: 0.5rem;
+            border-bottom-right-radius: 0.5rem;
+        }
+
+        #importInput {
+            display: none;
+        }
+
+        /* Toast Message */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--success);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header mit Menü -->
+        <div class="flex justify-between items-center mb-8 slide-in">
+            <h1 class="text-3xl font-bold">Berichtsheft</h1>
+            <button id="menuButton" class="p-2 hover:bg-gray-800 rounded-full transition-colors">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="1" />
+                    <circle cx="19" cy="12" r="1" />
+                    <circle cx="5" cy="12" r="1" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Menü Overlay -->
+        <div id="menuOverlay" class="menu-overlay">
+            <div class="menu-content">
+                <button class="menu-item w-full text-left" id="addEntryButton">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Neuer Eintrag
+                </button>
+                <button class="menu-item w-full text-left" id="importButton">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Importieren
+                </button>
+                <input type="file" id="importInput" accept=".txt">
+            </div>
+        </div>
+
+        <!-- Eingabeformular -->
+        <div class="card p-6 mb-8 fade-in" id="entryForm">
+            <form id="entryFormContent" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Datum</label>
+                        <input type="date" id="date" required class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Arbeitsbeginn</label>
+                        <input type="time" id="startTime" required class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Arbeitsende</label>
+                        <input type="time" id="endTime" required class="input-field">
+                    </div>
+                </div>
+
+                <div id="breakContainer" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-sm font-medium">Pausen</label>
+                        <button type="button" id="addBreak" class="text-blue-500 hover:text-blue-400 transition-colors">
+                            + Pause hinzufügen
+                        </button>
+                    </div>
+                    <div class="break-entry grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Pausenbeginn</label>
+                            <input type="time" class="break-start input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Pausenende</label>
+                            <input type="time" class="break-end input-field">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-2">Tätigkeiten</label>
+                    <textarea id="activities" required class="input-field" rows="4"
+                        placeholder="Beschreiben Sie Ihre Tätigkeiten..."></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-colors">
+                    Speichern
+                </button>
+            </form>
+        </div>
+
+        <!-- Einträge Liste -->
+        <div id="entriesList" class="space-y-4">
+            <!-- Einträge werden hier dynamisch eingefügt -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cookie Funktionen
+            function setCookie(name, value, days) {
+                const expires = new Date();
+                expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+                document.cookie = name + '=' + JSON.stringify(value) + ';expires=' + expires.toUTCString() + ';path=/';
+            }
+
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) {
+                    try {
+                        return JSON.parse(parts.pop().split(';').shift());
+                    } catch (e) {
+                        return [];
+                    }
+                }
+                return [];
+            }
+
+            let entries = getCookie('berichtsheft-entries') || [];
+
+            // UI Elemente
+            const menuButton = document.getElementById('menuButton');
+            const menuOverlay = document.getElementById('menuOverlay');
+            const addEntryButton = document.getElementById('addEntryButton');
+            const importButton = document.getElementById('importButton');
+            const importInput = document.getElementById('importInput');
+            const entryForm = document.getElementById('entryForm');
+            const entriesList = document.getElementById('entriesList');
+
+            // Menü Funktionen
+            function toggleMenu(show) {
+                menuOverlay.classList.toggle('active', show);
+            }
+
+            menuButton.addEventListener('click', () => toggleMenu(true));
+            menuOverlay.addEventListener('click', (e) => {
+                if (e.target === menuOverlay) toggleMenu(false);
+            });
+
+            // Zeitberechnungsfunktion
+            function calculateWorkTime(startTime, endTime, breaks) {
+                const start = new Date(`2000-01-01T${startTime}`);
+                const end = new Date(`2000-01-01T${endTime}`);
+                
+                let totalMinutes = (end - start) / (1000 * 60);
+                
+                breaks.forEach(breakTime => {
+                    if (breakTime.start && breakTime.end) {
+                        const breakStart = new Date(`2000-01-01T${breakTime.start}`);
+                        const breakEnd = new Date(`2000-01-01T${breakTime.end}`);
+                        totalMinutes -= (breakEnd - breakStart) / (1000 * 60);
+                    }
+                });
+                
+                // Konvertierung in Stunden und exakte Viertelstunden
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                
+                if (minutes === 0) return hours.toString();
+                if (minutes <= 7) return hours.toString();
+                if (minutes <= 22) return `${hours},25`;
+                if (minutes <= 37) return `${hours},5`;
+                if (minutes <= 52) return `${hours},75`;
+                return (hours + 1).toString();
+            }
+
+            // Pause hinzufügen
+            document.getElementById('addBreak').addEventListener('click', function() {
+                const breakContainer = document.getElementById('breakContainer');
+                const newBreak = document.createElement('div');
+                newBreak.className = 'break-entry grid grid-cols-1 md:grid-cols-2 gap-4 fade-in';
+                newBreak.innerHTML = `
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Pausenbeginn</label>
+                        <input type="time" class="break-start input-field">
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium mb-2">Pausenende</label>
+                            <input type="time" class="break-end input-field">
+                        </div>
+                        <button type="button" class="remove-break self-end text-red-500 hover:text-red-400 p-2">
+                            ✕
+                        </button>
