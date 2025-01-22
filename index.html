@@ -2,9 +2,9 @@
 <html lang="de" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Berichtsheft</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
@@ -15,34 +15,43 @@
             --text: #FFFFFF;
             --text-secondary: #A0A0A0;
             --primary: #3B82F6;
-            --primary-hover: #2563EB;
-            --success: #059669;
-            --danger: #DC2626;
+            --success: #10B981;
+            --danger: #EF4444;
         }
 
+        /* System-weite Styles */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        /* Basis Styles */
         body {
             background-color: var(--background);
             color: var(--text);
             min-height: 100vh;
-            -webkit-tap-highlight-color: transparent;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto;
+            overscroll-behavior-y: none;
         }
 
+        /* Card & Input Styles */
         .card {
             background-color: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 1rem;
         }
 
         .input-field {
             background-color: var(--card-bg);
             border: 1px solid var(--border);
             color: var(--text);
-            border-radius: 0.5rem;
+            border-radius: 0.75rem;
             padding: 0.75rem;
             width: 100%;
-            transition: border-color 0.2s ease;
+            appearance: none;
+            font-size: 1rem;
         }
 
         .input-field:focus {
@@ -51,47 +60,22 @@
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
 
-        @keyframes slideIn {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        /* Button Styles */
+        .primary-button {
+            background-color: var(--primary);
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            font-weight: 600;
+            transition: opacity 0.2s;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .primary-button:active {
+            opacity: 0.8;
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            75% { transform: translateX(8px); }
-        }
-
-        .slide-in {
-            animation: slideIn 0.3s ease-out forwards;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.3s ease-out forwards;
-        }
-
-        .shake {
-            animation: shake 0.5s ease-in-out;
-        }
-
-        .entry-card {
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .entry-card:active {
-            transform: scale(0.98);
-        }
-
-        .entry-card.delete-mode {
-            background-color: rgba(220, 38, 38, 0.1);
-            border: 2px solid var(--danger);
-        }
-
+        /* Menu Styles */
         .menu-overlay {
             position: fixed;
             top: 0;
@@ -99,6 +83,8 @@
             right: 0;
             bottom: 0;
             background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             z-index: 50;
             opacity: 0;
             pointer-events: none;
@@ -112,20 +98,19 @@
 
         .menu-content {
             position: absolute;
-            top: 3rem;
+            top: calc(3rem + env(safe-area-inset-top));
             right: 1rem;
             background-color: var(--card-bg);
-            border-radius: 0.5rem;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 0.75rem;
+            overflow: hidden;
             min-width: 200px;
-            transform: scale(0.95);
+            transform: scale(0.95) translateY(-10px);
             opacity: 0;
-            transition: transform 0.2s, opacity 0.2s;
+            transition: all 0.2s;
         }
 
         .menu-overlay.active .menu-content {
-            transform: scale(1);
+            transform: scale(1) translateY(0);
             opacity: 1;
         }
 
@@ -135,56 +120,126 @@
             align-items: center;
             gap: 0.75rem;
             color: var(--text);
-            transition: background-color 0.2s;
+            transition: background-color 0.15s;
+            user-select: none;
         }
 
-        .menu-item:hover {
+        .menu-item:active {
             background-color: rgba(255, 255, 255, 0.1);
         }
 
-        .menu-item:first-child {
-            border-top-left-radius: 0.5rem;
-            border-top-right-radius: 0.5rem;
+        /* Animationen */
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
-        .menu-item:last-child {
-            border-bottom-left-radius: 0.5rem;
-            border-bottom-right-radius: 0.5rem;
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        /* Toast Nachricht */
+        .toast {
+            position: fixed;
+            bottom: max(1rem, env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--success);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .toast.error {
+            background-color: var(--danger);
+        }
+
+        /* Entry Card Styles */
+        .entry-card {
+            animation: slideIn 0.3s ease-out;
+            padding: 1rem;
+        }
+
+        .entry-card:active {
+            transform: scale(0.98);
+        }
+
+        .entry-card.delete-mode {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--danger);
+        }
+
+        .delete-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: var(--danger);
+            transform: scale(0);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .delete-mode .delete-button {
+            transform: scale(1);
+            opacity: 1;
         }
 
         #importInput {
             display: none;
         }
 
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: var(--success);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            animation: slideIn 0.3s ease-out;
-            z-index: 100;
+        .section-header {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
         }
 
-        /* Touch-friendly Styles */
-        @media (pointer: coarse) {
-            .entry-card {
-                user-select: none;
-                -webkit-user-select: none;
+        .section-content {
+            color: var(--text);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* iOS-spezifische Anpassungen */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .input-field, .primary-button {
+                padding: 0.875rem 1rem;
+            }
+
+            input[type="date"], input[type="time"] {
+                min-height: 44px;
             }
         }
     </style>
 </head>
-<body class="p-4">
-    <div class="max-w-4xl mx-auto">
-        <!-- Header mit Menü -->
-        <div class="flex justify-between items-center mb-8 slide-in">
-            <h1 class="text-3xl font-bold">Berichtsheft</h1>
-            <button id="menuButton" class="p-2 hover:bg-gray-800 rounded-full transition-colors">
+<body>
+    <div class="max-w-4xl mx-auto px-4">
+        <!-- Header -->
+        <div class="sticky top-0 pt-safe flex justify-between items-center py-4 bg-[#121212] z-10">
+            <h1 class="text-2xl font-bold">Berichtsheft</h1>
+            <button id="menuButton" class="p-2 hover:bg-gray-800 rounded-full">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="1" />
                     <circle cx="19" cy="12" r="1" />
@@ -193,17 +248,17 @@
             </button>
         </div>
 
-        <!-- Menü Overlay -->
+        <!-- Menu -->
         <div id="menuOverlay" class="menu-overlay">
             <div class="menu-content">
-                <button class="menu-item w-full text-left" id="addEntryButton">
+                <button class="menu-item" id="addEntryButton">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="12" y1="5" x2="12" y2="19" />
                         <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
                     Neuer Eintrag
                 </button>
-                <button class="menu-item w-full text-left" id="importButton">
+                <button class="menu-item" id="importButton">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="7 10 12 15 17 10" />
@@ -216,67 +271,72 @@
         </div>
 
         <!-- Eingabeformular -->
-        <div class="card p-6 mb-8 fade-in" id="entryForm">
-            <form id="entryFormContent" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div id="entryForm" class="card p-4 mt-4 slide-in" style="display: none;">
+            <form id="entryFormContent" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium mb-2">Datum</label>
-                        <input type="date" id="date" required class="input-field">
+                        <label class="section-header">Datum</label>
+                        <input type="date" id="date" required class="input-field" value="">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Arbeitsbeginn</label>
+                        <label class="section-header">Arbeitsbeginn</label>
                         <input type="time" id="startTime" required class="input-field">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">Arbeitsende</label>
+                        <label class="section-header">Arbeitsende</label>
                         <input type="time" id="endTime" required class="input-field">
                     </div>
                 </div>
 
                 <div id="breakContainer" class="space-y-4">
                     <div class="flex justify-between items-center">
-                        <label class="block text-sm font-medium">Pausen</label>
-                        <button type="button" id="addBreak" class="text-blue-500 hover:text-blue-400 transition-colors">
+                        <label class="section-header">Pausen</label>
+                        <button type="button" id="addBreak" class="text-blue-500">
                             + Pause hinzufügen
                         </button>
                     </div>
                     <div class="break-entry grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium mb-2">Pausenbeginn</label>
+                            <label class="section-header">Pausenbeginn</label>
                             <input type="time" class="break-start input-field">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-2">Pausenende</label>
+                            <label class="section-header">Pausenende</label>
                             <input type="time" class="break-end input-field">
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-2">Tätigkeiten</label>
+                    <label class="section-header">Tätigkeiten</label>
                     <textarea id="activities" required class="input-field" rows="4"
                         placeholder="Beschreiben Sie Ihre Tätigkeiten..."></textarea>
                 </div>
 
-                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-colors">
-                    Speichern
-                </button>
+                <div class="flex gap-4">
+                    <button type="button" id="cancelEntry" class="primary-button bg-gray-600">
+                        Abbrechen
+                    </button>
+                    <button type="submit" class="primary-button">
+                        Speichern
+                    </button>
+                </div>
             </form>
         </div>
 
         <!-- Einträge Liste -->
-        <div id="entriesList" class="space-y-4">
+        <div id="entriesList" class="space-y-4 mt-4">
             <!-- Einträge werden hier dynamisch eingefügt -->
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Cookie Funktionen
+            // Basis-Funktionen
             function setCookie(name, value, days) {
                 const expires = new Date();
                 expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-                document.cookie = name + '=' + JSON.stringify(value) + ';expires=' + expires.toUTCString() + ';path=/';
+                document.cookie = `${name}=${JSON.stringify(value)};expires=${expires.toUTCString()};path=/`;
             }
 
             function getCookie(name) {
@@ -285,7 +345,7 @@
                 if (parts.length === 2) {
                     try {
                         return JSON.parse(parts.pop().split(';').shift());
-                    } catch (e) {
+                    } catch {
                         return [];
                     }
                 }
@@ -300,30 +360,90 @@
             const importInput = document.getElementById('importInput');
             const entryForm = document.getElementById('entryForm');
             const entryFormContent = document.getElementById('entryFormContent');
+            const cancelEntry = document.getElementById('cancelEntry');
             const entriesList = document.getElementById('entriesList');
+
+            // Daten
             let entries = getCookie('berichtsheft-entries') || [];
+            renderEntries(); // Initial render
 
-            // Formular initial ausblenden
-            entryForm.style.display = 'none';
-
-            // Menü Funktionen
-            function toggleMenu(show) {
-                menuOverlay.classList.toggle('active', show);
-            }
-
+            // Event Listeners
             menuButton.addEventListener('click', () => toggleMenu(true));
             menuOverlay.addEventListener('click', (e) => {
                 if (e.target === menuOverlay) toggleMenu(false);
             });
 
-            // Event-Handler für "Neuer Eintrag"
             addEntryButton.addEventListener('click', () => {
                 toggleMenu(false);
-                entryForm.style.display = 'block';
-                entryForm.scrollIntoView({ behavior: 'smooth' });
+                showEntryForm(true);
             });
 
-            // Zeitberechnungsfunktion
+            cancelEntry.addEventListener('click', () => {
+                showEntryForm(false);
+                entryFormContent.reset();
+            });
+
+            // Formular Events
+            entryFormContent.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const breaks = Array.from(document.querySelectorAll('.break-entry')).map(entry => ({
+                    start: entry
+                    start: entry.querySelector('.break-start').value,
+                    end: entry.querySelector('.break-end').value
+                })).filter(breakTime => breakTime.start && breakTime.end);
+
+                const newEntry = {
+                    date: document.getElementById('date').value,
+                    startTime: document.getElementById('startTime').value,
+                    endTime: document.getElementById('endTime').value,
+                    breaks: breaks,
+                    activities: document.getElementById('activities').value
+                };
+
+                newEntry.workTime = calculateWorkTime(newEntry.startTime, newEntry.endTime, newEntry.breaks);
+                entries.unshift(newEntry);
+                setCookie('berichtsheft-entries', entries, 365);
+                
+                renderEntries();
+                showToast('Eintrag gespeichert');
+                
+                this.reset();
+                showEntryForm(false);
+            });
+
+            // UI Helper Funktionen
+            function toggleMenu(show) {
+                menuOverlay.classList.toggle('active', show);
+            }
+
+            function showEntryForm(show) {
+                entryForm.style.display = show ? 'block' : 'none';
+                if (show) {
+                    // Datum auf heute setzen
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('date').value = today;
+                    setTimeout(() => {
+                        entryForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                }
+            }
+
+            function showToast(message, isError = false) {
+                const existing = document.querySelector('.toast');
+                if (existing) existing.remove();
+
+                const toast = document.createElement('div');
+                toast.className = `toast ${isError ? 'error' : ''}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 300);
+                }, 2700);
+            }
+
+            // Zeitberechnung
             function calculateWorkTime(startTime, endTime, breaks) {
                 const start = new Date(`2000-01-01T${startTime}`);
                 const end = new Date(`2000-01-01T${endTime}`);
@@ -338,7 +458,7 @@
                     }
                 });
                 
-                // Konvertierung in Stunden und exakte Viertelstunden
+                // Exakte Viertelstundenberechnung
                 const hours = Math.floor(totalMinutes / 60);
                 const minutes = totalMinutes % 60;
                 
@@ -350,32 +470,34 @@
                 return (hours + 1).toString();
             }
 
-            // Pause hinzufügen
+            // Pausen Management
             document.getElementById('addBreak').addEventListener('click', function() {
                 const breakContainer = document.getElementById('breakContainer');
                 const newBreak = document.createElement('div');
-                newBreak.className = 'break-entry grid grid-cols-1 md:grid-cols-2 gap-4 fade-in';
+                newBreak.className = 'break-entry grid grid-cols-1 md:grid-cols-2 gap-4 slide-in';
                 newBreak.innerHTML = `
                     <div>
-                        <label class="block text-sm font-medium mb-2">Pausenbeginn</label>
+                        <label class="section-header">Pausenbeginn</label>
                         <input type="time" class="break-start input-field">
                     </div>
                     <div class="flex gap-2">
                         <div class="flex-1">
-                            <label class="block text-sm font-medium mb-2">Pausenende</label>
+                            <label class="section-header">Pausenende</label>
                             <input type="time" class="break-end input-field">
                         </div>
-                        <button type="button" class="remove-break self-end text-red-500 hover:text-red-400 p-2">
-                            ✕
+                        <button type="button" class="remove-break self-end text-red-500 p-2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
                         </button>
                     </div>
                 `;
                 breakContainer.appendChild(newBreak);
             });
 
-            // Pause entfernen
             document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('remove-break')) {
+                if (e.target.closest('.remove-break')) {
                     const breakEntry = e.target.closest('.break-entry');
                     breakEntry.style.opacity = '0';
                     breakEntry.style.transform = 'translateY(-10px)';
@@ -383,7 +505,7 @@
                 }
             });
 
-            // Import-Funktionalität
+            // Import Funktionalität
             importButton.addEventListener('click', () => {
                 toggleMenu(false);
                 importInput.click();
@@ -402,6 +524,8 @@
                                 setCookie('berichtsheft-entries', entries, 365);
                                 renderEntries();
                                 showToast(`${importedEntries.length} Einträge importiert`);
+                            } else {
+                                showToast('Keine gültigen Einträge gefunden', true);
                             }
                         } catch (error) {
                             showToast('Fehler beim Importieren der Daten', true);
@@ -411,7 +535,6 @@
                 }
             });
 
-            // Funktion zum Parsen des importierten Texts
             function parseImportedText(text) {
                 const entries = [];
                 const blocks = text.split('---').filter(block => block.trim());
@@ -446,71 +569,35 @@
                 return entries;
             }
 
-            // Toast-Nachricht anzeigen
-            function showToast(message, isError = false) {
-                const toast = document.createElement('div');
-                toast.className = `toast ${isError ? 'bg-red-500' : 'bg-green-500'}`;
-                toast.textContent = message;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
-            }
-
-            // Einträge speichern
-            entryFormContent.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const breaks = Array.from(document.querySelectorAll('.break-entry')).map(entry => ({
-                    start: entry.querySelector('.break-start').value,
-                    end: entry.querySelector('.break-end').value
-                })).filter(break => break.start && break.end);
-
-                const entry = {
-                    date: document.getElementById('date').value,
-                    startTime: document.getElementById('startTime').value,
-                    endTime: document.getElementById('endTime').value,
-                    breaks: breaks,
-                    activities: document.getElementById('activities').value
-                };
-
-                entry.workTime = calculateWorkTime(entry.startTime, entry.endTime, entry.breaks);
-
-                entries.unshift(entry);
-                setCookie('berichtsheft-entries', entries, 365);
-                renderEntries();
-                
-                // Formular zurücksetzen und ausblenden
-                this.reset();
-                entryForm.style.display = 'none';
-
-                showToast('Eintrag gespeichert');
-            });
-
-            // Einträge anzeigen
+            // Einträge Rendering
             function renderEntries() {
                 entriesList.innerHTML = '';
                 entries.forEach((entry, index) => {
                     const entryElement = document.createElement('div');
-                    entryElement.className = 'entry-card card p-6 relative';
-
-                    // Long-Press-Handler für Löschen
+                    entryElement.className = 'card entry-card relative';
+                    
+                    // Touch-Events für Löschen
+                    let touchStartTime = 0;
                     let longPressTimer;
-                    entryElement.addEventListener('touchstart', () => {
+                    
+                    entryElement.addEventListener('touchstart', (e) => {
+                        touchStartTime = Date.now();
                         longPressTimer = setTimeout(() => {
                             entryElement.classList.add('delete-mode', 'shake');
-                            const deleteButton = entryElement.querySelector('.delete-button');
-                            if (deleteButton) {
-                                deleteButton.style.transform = 'scale(1)';
-                                deleteButton.style.opacity = '1';
-                            }
                         }, 500);
                     });
 
-                    entryElement.addEventListener('touchend', () => {
+                    entryElement.addEventListener('touchend', (e) => {
+                        const touchDuration = Date.now() - touchStartTime;
                         clearTimeout(longPressTimer);
-                    });
-
-                    entryElement.addEventListener('touchmove', () => {
-                        clearTimeout(longPressTimer);
+                        
+                        // Wenn es ein langer Touch war und der Delete-Mode aktiv ist
+                        if (touchDuration >= 500 && entryElement.classList.contains('delete-mode')) {
+                            const deleteButton = entryElement.querySelector('.delete-button');
+                            if (deleteButton) {
+                                deleteButton.style.display = 'block';
+                            }
+                        }
                     });
 
                     const formattedDate = new Date(entry.date).toLocaleDateString('de-DE', {
@@ -521,32 +608,58 @@
                     });
 
                     entryElement.innerHTML = `
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-sm text-gray-400">Datum</p>
-                                <p class="font-medium text-lg">${formattedDate}</p>
+                        <div class="p-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <div class="section-header">Datum</div>
+                                    <div class="section-content">${formattedDate}</div>
+                                </div>
+                                <div>
+                                    <div class="section-header">Arbeitszeit</div>
+                                    <div class="section-content">${entry.workTime} Stunden</div>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <div class="section-header">Arbeitszeiten</div>
+                                    <div class="section-content">
+                                        ${entry.startTime} - ${entry.endTime} Uhr
+                                        ${entry.breaks && entry.breaks.length > 0 ? 
+                                            `<br>Pausen: ${entry.breaks.map(b => 
+                                                `${b.start} - ${b.end}`).join(', ')}` : 
+                                            ''}
+                                    </div>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <div class="section-header">Tätigkeiten</div>
+                                    <div class="section-content whitespace-pre-wrap">${entry.activities}</div>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-sm text-gray-400">Arbeitszeit</p>
-                                <p class="font-medium text-lg">${entry.workTime} Stunden</p>
-                            </div>
-                            <div class="md:col-span-2">
-                                <p class="text-sm text-gray-400 mb-2">Arbeitszeiten</p>
-                                <p class="font-medium">
-                                    ${entry.startTime} - ${entry.endTime} Uhr
-                                    ${entry.breaks && entry.breaks.length > 0 ? 
-                                        `<br>Pausen: ${entry.breaks.map(b => 
-                                            `${b.start} - ${b.end}`).join(', ')}` : 
-                                        ''}
-                                </p>
-                            </div>
-                            <div class="md:col-span-2">
-                                <p class="text-sm text-gray-400 mb-2">Tätigkeiten</p>
-                                <p class="font-medium whitespace-pre-wrap">${entry.activities}</p>
-                            </div>
+                            <button class="delete-button absolute top-4 right-4 opacity-0" style="transition: opacity 0.3s">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 6h18"></path>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                </svg>
+                            </button>
                         </div>
-                        <button class="delete-button absolute top-4 right-4 text-red-500 p-2 rounded-full">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 6h18" />
-                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                <path d="M8 6V4c0-1 1-2 2-2h4c1
+                    `;
+
+                    // Lösch-Funktionalität
+                    const deleteButton = entryElement.querySelector('.delete-button');
+                    deleteButton.addEventListener('click', () => {
+                        entries.splice(index, 1);
+                        setCookie('berichtsheft-entries', entries, 365);
+                        entryElement.style.opacity = '0';
+                        entryElement.style.transform = 'translateX(100%)';
+                        setTimeout(() => {
+                            renderEntries();
+                        }, 300);
+                        showToast('Eintrag gelöscht');
+                    });
+
+                    entriesList.appendChild(entryElement);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
