@@ -92,7 +92,6 @@
             border: 2px solid var(--danger);
         }
 
-        /* Menü Styles */
         .menu-overlay {
             position: fixed;
             top: 0;
@@ -157,7 +156,6 @@
             display: none;
         }
 
-        /* Toast Message */
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -169,6 +167,15 @@
             border-radius: 0.5rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             animation: slideIn 0.3s ease-out;
+            z-index: 100;
+        }
+
+        /* Touch-friendly Styles */
+        @media (pointer: coarse) {
+            .entry-card {
+                user-select: none;
+                -webkit-user-select: none;
+            }
         }
     </style>
 </head>
@@ -285,8 +292,6 @@
                 return [];
             }
 
-            let entries = getCookie('berichtsheft-entries') || [];
-
             // UI Elemente
             const menuButton = document.getElementById('menuButton');
             const menuOverlay = document.getElementById('menuOverlay');
@@ -294,7 +299,12 @@
             const importButton = document.getElementById('importButton');
             const importInput = document.getElementById('importInput');
             const entryForm = document.getElementById('entryForm');
+            const entryFormContent = document.getElementById('entryFormContent');
             const entriesList = document.getElementById('entriesList');
+            let entries = getCookie('berichtsheft-entries') || [];
+
+            // Formular initial ausblenden
+            entryForm.style.display = 'none';
 
             // Menü Funktionen
             function toggleMenu(show) {
@@ -304,6 +314,13 @@
             menuButton.addEventListener('click', () => toggleMenu(true));
             menuOverlay.addEventListener('click', (e) => {
                 if (e.target === menuOverlay) toggleMenu(false);
+            });
+
+            // Event-Handler für "Neuer Eintrag"
+            addEntryButton.addEventListener('click', () => {
+                toggleMenu(false);
+                entryForm.style.display = 'block';
+                entryForm.scrollIntoView({ behavior: 'smooth' });
             });
 
             // Zeitberechnungsfunktion
@@ -351,3 +368,185 @@
                         <button type="button" class="remove-break self-end text-red-500 hover:text-red-400 p-2">
                             ✕
                         </button>
+                    </div>
+                `;
+                breakContainer.appendChild(newBreak);
+            });
+
+            // Pause entfernen
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-break')) {
+                    const breakEntry = e.target.closest('.break-entry');
+                    breakEntry.style.opacity = '0';
+                    breakEntry.style.transform = 'translateY(-10px)';
+                    setTimeout(() => breakEntry.remove(), 300);
+                }
+            });
+
+            // Import-Funktionalität
+            importButton.addEventListener('click', () => {
+                toggleMenu(false);
+                importInput.click();
+            });
+
+            importInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        try {
+                            const text = event.target.result;
+                            const importedEntries = parseImportedText(text);
+                            if (importedEntries.length > 0) {
+                                entries.unshift(...importedEntries);
+                                setCookie('berichtsheft-entries', entries, 365);
+                                renderEntries();
+                                showToast(`${importedEntries.length} Einträge importiert`);
+                            }
+                        } catch (error) {
+                            showToast('Fehler beim Importieren der Daten', true);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            });
+
+            // Funktion zum Parsen des importierten Texts
+            function parseImportedText(text) {
+                const entries = [];
+                const blocks = text.split('---').filter(block => block.trim());
+                
+                for (const block of blocks) {
+                    const lines = block.trim().split('\n');
+                    const entry = {};
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('Datum:')) {
+                            entry.date = line.split(':')[1].trim();
+                        } else if (line.startsWith('Zeit:')) {
+                            const [start, end] = line.split(':')[1].trim().split('-');
+                            entry.startTime = start.trim();
+                            entry.endTime = end.trim();
+                        } else if (line.startsWith('Pause:')) {
+                            entry.breaks = line.split(':')[1].trim().split(',').map(breakTime => {
+                                const [start, end] = breakTime.trim().split('-');
+                                return { start: start.trim(), end: end.trim() };
+                            });
+                        } else if (line.startsWith('Tätigkeiten:')) {
+                            entry.activities = line.split(':')[1].trim();
+                        }
+                    }
+                    
+                    if (entry.date && entry.startTime && entry.endTime) {
+                        entry.workTime = calculateWorkTime(entry.startTime, entry.endTime, entry.breaks || []);
+                        entries.push(entry);
+                    }
+                }
+                
+                return entries;
+            }
+
+            // Toast-Nachricht anzeigen
+            function showToast(message, isError = false) {
+                const toast = document.createElement('div');
+                toast.className = `toast ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            // Einträge speichern
+            entryFormContent.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const breaks = Array.from(document.querySelectorAll('.break-entry')).map(entry => ({
+                    start: entry.querySelector('.break-start').value,
+                    end: entry.querySelector('.break-end').value
+                })).filter(break => break.start && break.end);
+
+                const entry = {
+                    date: document.getElementById('date').value,
+                    startTime: document.getElementById('startTime').value,
+                    endTime: document.getElementById('endTime').value,
+                    breaks: breaks,
+                    activities: document.getElementById('activities').value
+                };
+
+                entry.workTime = calculateWorkTime(entry.startTime, entry.endTime, entry.breaks);
+
+                entries.unshift(entry);
+                setCookie('berichtsheft-entries', entries, 365);
+                renderEntries();
+                
+                // Formular zurücksetzen und ausblenden
+                this.reset();
+                entryForm.style.display = 'none';
+
+                showToast('Eintrag gespeichert');
+            });
+
+            // Einträge anzeigen
+            function renderEntries() {
+                entriesList.innerHTML = '';
+                entries.forEach((entry, index) => {
+                    const entryElement = document.createElement('div');
+                    entryElement.className = 'entry-card card p-6 relative';
+
+                    // Long-Press-Handler für Löschen
+                    let longPressTimer;
+                    entryElement.addEventListener('touchstart', () => {
+                        longPressTimer = setTimeout(() => {
+                            entryElement.classList.add('delete-mode', 'shake');
+                            const deleteButton = entryElement.querySelector('.delete-button');
+                            if (deleteButton) {
+                                deleteButton.style.transform = 'scale(1)';
+                                deleteButton.style.opacity = '1';
+                            }
+                        }, 500);
+                    });
+
+                    entryElement.addEventListener('touchend', () => {
+                        clearTimeout(longPressTimer);
+                    });
+
+                    entryElement.addEventListener('touchmove', () => {
+                        clearTimeout(longPressTimer);
+                    });
+
+                    const formattedDate = new Date(entry.date).toLocaleDateString('de-DE', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    entryElement.innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-400">Datum</p>
+                                <p class="font-medium text-lg">${formattedDate}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400">Arbeitszeit</p>
+                                <p class="font-medium text-lg">${entry.workTime} Stunden</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <p class="text-sm text-gray-400 mb-2">Arbeitszeiten</p>
+                                <p class="font-medium">
+                                    ${entry.startTime} - ${entry.endTime} Uhr
+                                    ${entry.breaks && entry.breaks.length > 0 ? 
+                                        `<br>Pausen: ${entry.breaks.map(b => 
+                                            `${b.start} - ${b.end}`).join(', ')}` : 
+                                        ''}
+                                </p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <p class="text-sm text-gray-400 mb-2">Tätigkeiten</p>
+                                <p class="font-medium whitespace-pre-wrap">${entry.activities}</p>
+                            </div>
+                        </div>
+                        <button class="delete-button absolute top-4 right-4 text-red-500 p-2 rounded-full">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18" />
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1
