@@ -46,6 +46,39 @@ body {
              env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
+/* Cookie-Hinweis */
+.cookie-notice {
+    position: fixed;
+    bottom: calc(5rem + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translate(-50%, 150%);
+    background-color: var(--card-bg);
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    z-index: 1000;
+    transition: transform 0.3s ease-out;
+    border: 1px solid var(--border);
+    width: 90%;
+    max-width: 400px;
+}
+
+.cookie-notice.show {
+    transform: translate(-50%, 0);
+}
+
+.cookie-notice button {
+    margin-top: 1rem;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.5rem 2rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 /* Header Styles */
 .header {
     position: fixed;
@@ -105,6 +138,7 @@ body {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
+    border-right: 1px solid var(--border);
 }
 
 .main-menu-modal.active {
@@ -121,6 +155,7 @@ body {
 .menu-content h2 {
     font-size: 1.3rem;
     margin-bottom: 1rem;
+    color: var(--text);
 }
 
 .menu-item {
@@ -147,6 +182,25 @@ body {
     margin-top: calc(4rem + env(safe-area-inset-top));
     padding: 1rem;
     padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+    min-height: calc(100vh - 4rem);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+}
+
+.empty-state p {
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.empty-state p:first-child {
+    font-size: 1.1rem;
+    color: var(--text);
+    margin-bottom: 1.5rem;
 }
 
 /* Card Styles */
@@ -258,31 +312,6 @@ body {
     line-height: 1.5;
     white-space: pre-wrap;
     color: var(--text);
-}
-
-/* Floating Action Button */
-.fab {
-    position: fixed;
-    bottom: calc(2rem + env(safe-area-inset-bottom));
-    right: 2rem;
-    width: 56px;
-    height: 56px;
-    border-radius: 28px;
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    font-size: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    transition: transform 0.2s;
-    cursor: pointer;
-    z-index: 40;
-}
-
-.fab:active {
-    transform: scale(0.95);
 }
 
 /* Modal Styles */
@@ -406,20 +435,59 @@ button:active {
     border: 1px solid var(--border);
 }
 
-/* Toast Notification */
-.toast {
+/* Floating Action Button */
+.fab {
+    position: fixed;
+    bottom: calc(2rem + env(safe-area-inset-bottom));
+    right: 2rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s;
+    cursor: pointer;
+    z-index: 40;
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
+
+/* Toast Container */
+#toastContainer {
     position: fixed;
     bottom: calc(5rem + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    pointer-events: none;
+}
+
+.toast {
     background-color: var(--card-bg);
     color: var(--text);
     padding: 0.75rem 1.5rem;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    z-index: 1000;
     animation: fadeIn 0.2s ease-out;
     border: 1px solid var(--border);
+    pointer-events: auto;
+}
+
+.toast.error {
+    border-color: var(--danger);
+    color: var(--danger);
 }
 
 /* Animationen */
@@ -454,23 +522,21 @@ button:active {
     }
 }
 
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
 /* Dark Mode Optimierungen */
 @media (prefers-color-scheme: dark) {
     input[type="date"],
     input[type="time"],
     textarea {
         color-scheme: dark;
-    }
-}
-
-/* Touch Optimierungen */
-@media (hover: hover) {
-    button:hover {
-        opacity: 0.9;
-    }
-    
-    .menu-item:hover {
-        background-color: var(--border);
     }
 }
 
@@ -483,13 +549,10 @@ button:active {
     .modal-content {
         padding: 1rem;
     }
-}
-
-/* Leere Liste */
-.empty-state {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
+    
+    .menu-item {
+        padding: 0.5rem;
+    }
 }
     </style>
     <!-- CSS HIER EINFÜGEN - Ende -->
@@ -506,33 +569,21 @@ button:active {
         <div class="menu-content">
             <h2>Menü</h2>
             <button class="menu-item import-entries">Berichtsheft importieren</button>
-            <button class="menu-item view-previous">Vorherige Einträge</button>
             <input type="file" id="fileInput" accept=".txt" style="display: none;">
         </div>
     </div>
 
+    <!-- Cookie-Warnung -->
+    <div class="cookie-notice" id="cookieNotice">
+        <p>Diese App speichert Ihre Einträge lokal in Cookies.</p>
+        <button id="acceptCookies">OK</button>
+    </div>
+
     <!-- Eintrags-Liste -->
     <main class="entry-list">
-        <!-- Beispiel für einen Eintrag -->
-        <div class="card">
-            <div class="card-header">
-                <span class="date">23.01.2024</span>
-                <div class="actions">
-                    <span class="work-time">8,5 Std</span>
-                    <button class="menu-button entry-menu">⋮</button>
-                    <div class="menu">
-                        <button class="menu-item edit">Bearbeiten</button>
-                        <button class="menu-item delete">Löschen</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-content">
-                <div class="times">
-                    <span class="time">07:30 - 16:00</span>
-                    <span class="break">Pause: 12:00 - 12:30</span>
-                </div>
-                <p class="activities">Beschreibung der Tätigkeiten...</p>
-            </div>
+        <div class="empty-state">
+            <p>Keine Einträge vorhanden</p>
+            <p>Nutzen Sie + um einen neuen Eintrag zu erstellen<br>oder importieren Sie bestehende Einträge über das Menü.</p>
         </div>
     </main>
 
@@ -572,7 +623,7 @@ button:active {
 
                 <div class="form-group">
                     <label for="activities">Tätigkeiten</label>
-                    <textarea id="activities" required></textarea>
+                    <textarea id="activities" required placeholder="Beschreiben Sie hier Ihre Tätigkeiten..."></textarea>
                 </div>
 
                 <div class="button-group">
@@ -583,16 +634,43 @@ button:active {
         </div>
     </div>
 
+    <!-- Template für Einträge -->
+    <template id="entryTemplate">
+        <div class="card" data-date="">
+            <div class="card-header">
+                <span class="date"></span>
+                <div class="actions">
+                    <span class="work-time"></span>
+                    <button class="menu-button entry-menu">⋮</button>
+                    <div class="menu">
+                        <button class="menu-item edit">Bearbeiten</button>
+                        <button class="menu-item delete">Löschen</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="times">
+                    <span class="time"></span>
+                    <span class="break"></span>
+                </div>
+                <p class="activities"></p>
+            </div>
+        </div>
+    </template>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" aria-live="polite"></div>
+
     <!-- JavaScript HIER EINFÜGEN - Start -->
     <script>
 // Konstanten für Cookie-Handling und DOM-Elemente
 const COOKIE_NAME = 'berichtsheft_entries';
+const COOKIE_NOTICE = 'berichtsheft_notice_accepted';
 
 // DOM-Elemente
 const modal = document.getElementById('entryModal');
 const form = document.getElementById('entryForm');
 const modalTitle = document.getElementById('modalTitle');
-const breakEntries = document.getElementById('breakEntries');
 const newEntryButton = document.getElementById('newEntryButton');
 const cancelButton = document.getElementById('cancelButton');
 const entryList = document.querySelector('.entry-list');
@@ -600,16 +678,31 @@ const mainMenuButton = document.querySelector('.menu-button.main-menu');
 const mainMenuModal = document.querySelector('.main-menu-modal');
 const importButton = document.querySelector('.import-entries');
 const fileInput = document.getElementById('fileInput');
-const viewPreviousButton = document.querySelector('.view-previous');
+const cookieNotice = document.getElementById('cookieNotice');
+const acceptCookiesButton = document.getElementById('acceptCookies');
+const entryTemplate = document.getElementById('entryTemplate');
 
 let currentEditId = null;
 let activeMenu = null;
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
+    checkCookieNotice();
     loadEntries();
     setupEventListeners();
     setupMenuHandlers();
+});
+
+// Cookie Notice Handler
+function checkCookieNotice() {
+    if (!getCookie(COOKIE_NOTICE)) {
+        cookieNotice.classList.add('show');
+    }
+}
+
+acceptCookiesButton.addEventListener('click', () => {
+    document.cookie = `${COOKIE_NOTICE}=true;max-age=31536000000;path=/;SameSite=Strict`;
+    cookieNotice.classList.remove('show');
 });
 
 // Event Listener Setup
@@ -622,7 +715,6 @@ function setupEventListeners() {
     mainMenuButton.addEventListener('click', toggleMainMenu);
     importButton.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', handleFileImport);
-    viewPreviousButton.addEventListener('click', loadPreviousEntries);
     
     // Schließe Menüs wenn außerhalb geklickt wird
     document.addEventListener('click', (e) => {
@@ -640,7 +732,7 @@ function setupEventListeners() {
     });
 }
 
-// Menü Funktionen
+// Menü Setup und Handler
 function setupMenuHandlers() {
     entryList.addEventListener('click', (e) => {
         const menuButton = e.target.closest('.menu-button.entry-menu');
@@ -726,176 +818,24 @@ function closeModal() {
     currentEditId = null;
 }
 
-// Datei Import/Export
-async function handleFileImport(e) {
-    try {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const text = await file.text();
-        const entries = parseImportedText(text);
-        
-        if (entries.length > 0) {
-            const existingEntries = getEntries();
-            const newEntries = mergeEntries(existingEntries, entries);
-            saveEntries(newEntries);
-            renderEntries(newEntries);
-            showToast('Einträge erfolgreich importiert');
-        } else {
-            showToast('Keine gültigen Einträge gefunden', 'error');
-        }
-    } catch (error) {
-        console.error('Fehler beim Importieren:', error);
-        showToast('Fehler beim Importieren der Datei', 'error');
-    }
+// Toast Notification System
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    document.getElementById('toastContainer').appendChild(toast);
     
-    // Reset file input
-    e.target.value = '';
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease-out';
+        toast.addEventListener('animationend', () => toast.remove(), { once: true });
+    }, 3000);
 }
-function parseImportedText(text) {
-    try {
-        // Entferne BOM falls vorhanden
-        text = text.replace(/^\uFEFF/, '');
-        
-        // Versuche direkt als JSON zu parsen
-        try {
-            const entries = JSON.parse(text);
-            if (Array.isArray(entries)) return entries;
-        } catch {}
-        
-        // Versuche als formatierte Textdatei zu parsen
-        const entries = [];
-        const lines = text.split('\n');
-        let currentEntry = null;
-        
-        for (const line of lines) {
-            const trimmedLine = line.trim();
-            if (!trimmedLine) continue;
-            
-            // Neuer Eintrag beginnt mit Datum
-            if (trimmedLine.match(/^\d{2}\.\d{2}\.\d{4}/)) {
-                if (currentEntry) entries.push(currentEntry);
-                
-                const [day, month, year] = trimmedLine.split('.');
-                currentEntry = {
-                    date: `${year}-${month}-${day}`,
-                    activities: []
-                };
-            }
-            // Zeiten erkennen (HH:MM - HH:MM)
-            else if (trimmedLine.match(/^\d{2}:\d{2}\s*-\s*\d{2}:\d{2}/)) {
-                const [start, end] = trimmedLine.split('-').map(t => t.trim());
-                if (currentEntry) {
-                    currentEntry.startTime = start;
-                    currentEntry.endTime = end;
-                }
-            }
-            // Pause erkennen
-            else if (trimmedLine.toLowerCase().includes('pause')) {
-                const timeMatch = trimmedLine.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
-                if (timeMatch && currentEntry) {
-                    currentEntry.breaks = [{
-                        start: timeMatch[1],
-                        end: timeMatch[2]
-                    }];
-                }
-            }
-            // Rest als Aktivitäten
-            else if (currentEntry) {
-                currentEntry.activities.push(trimmedLine);
-            }
-        }
-        
-        // Letzten Eintrag nicht vergessen
-        if (currentEntry) {
-            currentEntry.activities = currentEntry.activities.join('\n');
-            entries.push(currentEntry);
-        }
-        
-        // Arbeitszeit berechnen für jeden Eintrag
-        return entries.map(entry => {
-            if (!entry.breaks) entry.breaks = [{ start: '12:00', end: '12:30' }];
-            entry.workTime = calculateWorkTime(entry.startTime, entry.endTime, entry.breaks);
-            return entry;
-        });
-        
-    } catch (error) {
-        console.error('Fehler beim Parsen der Datei:', error);
-        return [];
-    }
-}
-
-function mergeEntries(existing, imported) {
-    const merged = [...existing];
-    
-    for (const newEntry of imported) {
-        const existingIndex = merged.findIndex(e => e.date === newEntry.date);
-        if (existingIndex !== -1) {
-            if (confirm(`Eintrag für ${formatDate(newEntry.date)} existiert bereits. Überschreiben?`)) {
-                merged[existingIndex] = newEntry;
-            }
-        } else {
-            merged.push(newEntry);
-        }
-    }
-    
-    return merged.sort((a, b) => new Date(b.date) - new Date(a.date));
-}
-
-function loadPreviousEntries() {
-    const entries = getEntries();
-    const today = new Date();
-    const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate());
-    
-    const previousEntries = entries.filter(entry => {
-        const entryDate = new Date(entry.date);
-        return entryDate < threeMonthsAgo;
-    });
-    
-    if (previousEntries.length === 0) {
-        showToast('Keine älteren Einträge gefunden');
-        return;
-    }
-    
-    renderEntries(previousEntries);
-    showToast(`${previousEntries.length} ältere Einträge geladen`);
-    mainMenuModal.classList.remove('active');
-}
-
-function calculateWorkTime(startTime, endTime, breaks) {
-    const start = timeToMinutes(startTime);
-    const end = timeToMinutes(endTime);
-    
-    const totalBreakTime = breaks.reduce((total, breakItem) => {
-        const breakStart = timeToMinutes(breakItem.start);
-        const breakEnd = timeToMinutes(breakItem.end);
-        return total + (breakEnd - breakStart);
-    }, 0);
-    
-    const totalMinutes = end - start - totalBreakTime;
-    
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    
-    if (minutes <= 7) return hours.toString();
-    if (minutes <= 22) return `${hours},25`;
-    if (minutes <= 37) return `${hours},5`;
-    if (minutes <= 52) return `${hours},75`;
-    return (hours + 1).toString();
-}
-
-function timeToMinutes(timeStr) {
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours * 60 + minutes;
-}
-
-function formatDate(dateStr) {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
+// Cookie Funktionen
+function getCookie(name) {
+    return document.cookie
+        .split('; ')
+        .find(row => row.startsWith(name))
+        ?.split('=')[1];
 }
 
 function saveEntries(entries) {
@@ -904,16 +844,9 @@ function saveEntries(entries) {
 
 function loadEntries() {
     try {
-        const cookie = document.cookie
-            .split('; ')
-            .find(row => row.startsWith(COOKIE_NAME));
-        
-        if (cookie) {
-            const entries = JSON.parse(cookie.split('=')[1]);
-            renderEntries(entries);
-        } else {
-            renderEntries([]); // Zeige leere Liste
-        }
+        const cookieData = getCookie(COOKIE_NAME);
+        const entries = cookieData ? JSON.parse(cookieData) : [];
+        renderEntries(entries);
     } catch (error) {
         console.error('Fehler beim Laden der Einträge:', error);
         showToast('Fehler beim Laden der Einträge', 'error');
@@ -923,21 +856,77 @@ function loadEntries() {
 
 function getEntries() {
     try {
-        const cookie = document.cookie
-            .split('; ')
-            .find(row => row.startsWith(COOKIE_NAME));
-        return cookie ? JSON.parse(cookie.split('=')[1]) : [];
+        const cookieData = getCookie(COOKIE_NAME);
+        return cookieData ? JSON.parse(cookieData) : [];
     } catch (error) {
         console.error('Fehler beim Abrufen der Einträge:', error);
         return [];
     }
 }
 
+// Datei Import
+async function handleFileImport(e) {
+    try {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const text = await file.text();
+        const importedEntries = JSON.parse(text);
+        
+        if (!Array.isArray(importedEntries)) {
+            throw new Error('Ungültiges Dateiformat');
+        }
+
+        const existingEntries = getEntries();
+        const mergedEntries = mergeEntries(existingEntries, importedEntries);
+        
+        saveEntries(mergedEntries);
+        renderEntries(mergedEntries);
+        showToast('Einträge erfolgreich importiert');
+    } catch (error) {
+        console.error('Fehler beim Importieren:', error);
+        showToast('Fehler beim Importieren der Datei', 'error');
+    }
+    
+    // Reset file input
+    e.target.value = '';
+}
+
+function mergeEntries(existing, imported) {
+    const merged = [...existing];
+    let updates = 0;
+    let additions = 0;
+
+    for (const newEntry of imported) {
+        const existingIndex = merged.findIndex(e => e.date === newEntry.date);
+        if (existingIndex !== -1) {
+            merged[existingIndex] = newEntry;
+            updates++;
+        } else {
+            merged.push(newEntry);
+            additions++;
+        }
+    }
+    
+    // Sortiere nach Datum (neueste zuerst)
+    const sortedEntries = merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Zeige Zusammenfassung, wenn Änderungen vorgenommen wurden
+    if (updates > 0 || additions > 0) {
+        const summary = [];
+        if (additions > 0) summary.push(`${additions} neue Einträge`);
+        if (updates > 0) summary.push(`${updates} aktualisierte Einträge`);
+        showToast(summary.join(', '));
+    }
+    
+    return sortedEntries;
+}
+
+// Formular Handler
 async function handleSubmit(e) {
     e.preventDefault();
     
     try {
-        // Sammle Formulardaten
         const formData = {
             date: document.getElementById('date').value,
             startTime: document.getElementById('startTime').value,
@@ -946,7 +935,7 @@ async function handleSubmit(e) {
                 start: document.querySelector('.break-start').value,
                 end: document.querySelector('.break-end').value
             }],
-            activities: document.getElementById('activities').value
+            activities: document.getElementById('activities').value.trim()
         };
         
         // Validiere Zeiten
@@ -1013,49 +1002,75 @@ async function handleSubmit(e) {
     }
 }
 
-// UI Rendering
-function renderEntries(entries) {
-    entryList.innerHTML = entries.length ? entries.map(entry => `
-        <div class="card" data-date="${entry.date}">
-            <div class="card-header">
-                <span class="date">${formatDate(entry.date)}</span>
-                <div class="actions">
-                    <span class="work-time">${entry.workTime} Std</span>
-                    <button class="menu-button entry-menu">⋮</button>
-                    <div class="menu">
-                        <button class="menu-item edit">Bearbeiten</button>
-                        <button class="menu-item delete">Löschen</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-content">
-                <div class="times">
-                    <span class="time">${entry.startTime} - ${entry.endTime}</span>
-                    <span class="break">Pause: ${entry.breaks[0].start} - ${entry.breaks[0].end}</span>
-                </div>
-                <p class="activities">${entry.activities}</p>
-            </div>
-        </div>
-    `).join('') : `
-        <div class="empty-state">
-            <p>Keine Einträge vorhanden</p>
-        </div>
-    `;
+// Zeitberechnung
+function calculateWorkTime(startTime, endTime, breaks) {
+    const start = timeToMinutes(startTime);
+    const end = timeToMinutes(endTime);
+    
+    const totalBreakTime = breaks.reduce((total, breakItem) => {
+        const breakStart = timeToMinutes(breakItem.start);
+        const breakEnd = timeToMinutes(breakItem.end);
+        return total + (breakEnd - breakStart);
+    }, 0);
+    
+    const totalMinutes = end - start - totalBreakTime;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    
+    if (minutes <= 7) return hours.toString();
+    if (minutes <= 22) return `${hours},25`;
+    if (minutes <= 37) return `${hours},5`;
+    if (minutes <= 52) return `${hours},75`;
+    return (hours + 1).toString();
 }
 
-// Toast Notifications
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
+function timeToMinutes(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+}
+
+// UI Rendering
+function renderEntries(entries) {
+    const hasEntries = entries.length > 0;
+    entryList.innerHTML = ''; // Liste leeren
     
-    setTimeout(() => {
-        toast.style.animation = 'fadeOut 0.3s ease-out';
-        toast.addEventListener('animationend', () => {
-            toast.remove();
-        }, { once: true });
-    }, 3000);
+    if (hasEntries) {
+        const fragment = document.createDocumentFragment();
+        entries.forEach(entry => {
+            const card = createEntryCard(entry);
+            fragment.appendChild(card);
+        });
+        entryList.appendChild(fragment);
+    } else {
+        entryList.innerHTML = `
+            <div class="empty-state">
+                <p>Keine Einträge vorhanden</p>
+                <p>Nutzen Sie + um einen neuen Eintrag zu erstellen<br>oder importieren Sie bestehende Einträge über das Menü.</p>
+            </div>`;
+    }
+}
+
+function createEntryCard(entry) {
+    const template = document.getElementById('entryTemplate');
+    const card = template.content.cloneNode(true).children[0];
+    
+    card.dataset.date = entry.date;
+    card.querySelector('.date').textContent = formatDate(entry.date);
+    card.querySelector('.work-time').textContent = `${entry.workTime} Std`;
+    card.querySelector('.time').textContent = `${entry.startTime} - ${entry.endTime}`;
+    card.querySelector('.break').textContent = `Pause: ${entry.breaks[0].start} - ${entry.breaks[0].end}`;
+    card.querySelector('.activities').textContent = entry.activities;
+    
+    return card;
 }
 
 // Bearbeiten & Löschen
@@ -1073,16 +1088,11 @@ function handleDelete(card) {
         const entries = getEntries();
         const dateToDelete = card.dataset.date;
         const updatedEntries = entries.filter(entry => entry.date !== dateToDelete);
-        saveEntries(updatedEntries);
         
-        // Animierte Entfernung
         card.style.animation = 'slideOut 0.3s ease-out';
         card.addEventListener('animationend', () => {
-            if (updatedEntries.length === 0) {
-                renderEntries([]); // Zeige leere Liste
-            } else {
-                card.remove();
-            }
+            saveEntries(updatedEntries);
+            renderEntries(updatedEntries);
             showToast('Eintrag gelöscht');
         }, { once: true });
     }
