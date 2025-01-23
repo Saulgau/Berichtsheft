@@ -7,8 +7,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#121212">
     <title>Berichtsheft</title>
+
+    <!-- CSS HIER EINFÜGEN - Start -->
     <style>
-   /* Grundlegende CSS-Variablen */
+/* Grundlegende CSS-Variablen */
 :root {
     --background: #121212;
     --card-bg: #1E1E1E;
@@ -56,12 +58,88 @@ body {
     border-bottom: 1px solid var(--border);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .header h1 {
     font-size: 1.5rem;
     font-weight: 600;
+    flex: 1;
     text-align: center;
+    margin-right: 44px; /* Ausgleich für Menü-Button */
+}
+
+/* Hauptmenü Button */
+.menu-button.main-menu {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 1.5rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.menu-button.main-menu:active {
+    background-color: var(--border);
+}
+
+/* Hauptmenü Modal */
+.main-menu-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background-color: var(--menu-bg);
+    width: 280px;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-out;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+.main-menu-modal.active {
+    transform: translateX(0);
+}
+
+.menu-content {
+    padding: calc(env(safe-area-inset-top) + 1rem) 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.menu-content h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    border-radius: 8px;
+    min-height: 44px;
+}
+
+.menu-item:active {
+    background-color: var(--border);
 }
 
 /* Eintrags-Liste */
@@ -97,7 +175,8 @@ body {
     position: relative;
 }
 
-.menu-button {
+/* Drei-Punkte-Menü */
+.menu-button.entry-menu {
     background: none;
     border: none;
     color: var(--text);
@@ -112,11 +191,10 @@ body {
     border-radius: 8px;
 }
 
-.menu-button:active {
+.menu-button.entry-menu:active {
     background-color: var(--border);
 }
 
-/* Drei-Punkte-Menü */
 .menu {
     position: absolute;
     top: calc(100% + 4px);
@@ -136,24 +214,11 @@ body {
     animation: fadeIn 0.2s ease-out;
 }
 
-.menu-item {
-    display: block;
-    width: 100%;
-    padding: 0.75rem 1rem;
-    text-align: left;
-    background: none;
-    border: none;
-    color: var(--text);
-    font-size: 1rem;
-    cursor: pointer;
-    min-height: 44px;
+.menu .menu-item {
+    border-radius: 0;
 }
 
-.menu-item:active {
-    background-color: var(--border);
-}
-
-.menu-item.delete {
+.menu .menu-item.delete {
     color: var(--danger);
 }
 
@@ -298,30 +363,14 @@ textarea {
     line-height: 1.5;
 }
 
-.break-entries {
-    margin-bottom: 1rem;
-}
-
 .break-entry {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
 }
 
 .break-entry input {
     flex: 1;
-}
-
-.remove-break {
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background-color: var(--background);
-    color: var(--danger);
-    font-size: 1.5rem;
-    cursor: pointer;
 }
 
 .button-group {
@@ -405,18 +454,6 @@ button:active {
     }
 }
 
-@keyframes shake {
-    0%, 100% {
-        transform: translateX(0);
-    }
-    25% {
-        transform: translateX(-8px);
-    }
-    75% {
-        transform: translateX(8px);
-    }
-}
-
 /* Dark Mode Optimierungen */
 @media (prefers-color-scheme: dark) {
     input[type="date"],
@@ -428,10 +465,6 @@ button:active {
 
 /* Touch Optimierungen */
 @media (hover: hover) {
-    .fab:hover {
-        transform: scale(1.05);
-    }
-    
     button:hover {
         opacity: 0.9;
     }
@@ -447,21 +480,36 @@ button:active {
         flex-direction: column;
     }
     
-    .break-entry {
-        flex-wrap: wrap;
-    }
-    
     .modal-content {
         padding: 1rem;
     }
 }
+
+/* Leere Liste */
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
     </style>
+    <!-- CSS HIER EINFÜGEN - Ende -->
 </head>
 <body>
-    <!-- Header -->
+    <!-- Header mit Hauptmenü -->
     <header class="header">
+        <button class="menu-button main-menu">☰</button>
         <h1>Berichtsheft</h1>
     </header>
+
+    <!-- Hauptmenü -->
+    <div class="main-menu-modal">
+        <div class="menu-content">
+            <h2>Menü</h2>
+            <button class="menu-item import-entries">Berichtsheft importieren</button>
+            <button class="menu-item view-previous">Vorherige Einträge</button>
+            <input type="file" id="fileInput" accept=".txt" style="display: none;">
+        </div>
+    </div>
 
     <!-- Eintrags-Liste -->
     <main class="entry-list">
@@ -471,7 +519,7 @@ button:active {
                 <span class="date">23.01.2024</span>
                 <div class="actions">
                     <span class="work-time">8,5 Std</span>
-                    <button class="menu-button">⋮</button>
+                    <button class="menu-button entry-menu">⋮</button>
                     <div class="menu">
                         <button class="menu-item edit">Bearbeiten</button>
                         <button class="menu-item delete">Löschen</button>
@@ -514,16 +562,12 @@ button:active {
                 </div>
 
                 <div class="form-group">
-                    <label>Pausen</label>
-                    <div class="break-entries" id="breakEntries">
-                        <div class="break-entry">
-                            <input type="time" class="break-start" required>
-                            <span>-</span>
-                            <input type="time" class="break-end" required>
-                            <button type="button" class="remove-break">×</button>
-                        </div>
+                    <label>Pause</label>
+                    <div class="break-entry">
+                        <input type="time" class="break-start" required>
+                        <span>-</span>
+                        <input type="time" class="break-end" required>
                     </div>
-                    <button type="button" id="addBreak">+ Pause hinzufügen</button>
                 </div>
 
                 <div class="form-group">
@@ -539,22 +583,27 @@ button:active {
         </div>
     </div>
 
+    <!-- JavaScript HIER EINFÜGEN - Start -->
     <script>
-  // Konstanten für Cookie-Handling und DOM-Elemente
+// Konstanten für Cookie-Handling und DOM-Elemente
 const COOKIE_NAME = 'berichtsheft_entries';
 
 // DOM-Elemente
 const modal = document.getElementById('entryModal');
 const form = document.getElementById('entryForm');
 const modalTitle = document.getElementById('modalTitle');
-const addBreakButton = document.getElementById('addBreak');
 const breakEntries = document.getElementById('breakEntries');
 const newEntryButton = document.getElementById('newEntryButton');
 const cancelButton = document.getElementById('cancelButton');
 const entryList = document.querySelector('.entry-list');
+const mainMenuButton = document.querySelector('.menu-button.main-menu');
+const mainMenuModal = document.querySelector('.main-menu-modal');
+const importButton = document.querySelector('.import-entries');
+const fileInput = document.getElementById('fileInput');
+const viewPreviousButton = document.querySelector('.view-previous');
 
-let currentEditId = null; // Für Bearbeitung-Modus
-let activeMenu = null; // Für aktives Menü-Tracking
+let currentEditId = null;
+let activeMenu = null;
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
@@ -567,21 +616,34 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
     newEntryButton.addEventListener('click', () => openModal());
     cancelButton.addEventListener('click', closeModal);
-    addBreakButton.addEventListener('click', addBreakEntry);
     form.addEventListener('submit', handleSubmit);
+    
+    // Hauptmenü Listeners
+    mainMenuButton.addEventListener('click', toggleMainMenu);
+    importButton.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFileImport);
+    viewPreviousButton.addEventListener('click', loadPreviousEntries);
     
     // Schließe Menüs wenn außerhalb geklickt wird
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('.menu') && !e.target.closest('.menu-button')) {
+        // Hauptmenü schließen
+        if (!e.target.closest('.main-menu-modal') && 
+            !e.target.closest('.menu-button.main-menu')) {
+            mainMenuModal.classList.remove('active');
+        }
+        
+        // Eintrags-Menüs schließen
+        if (!e.target.closest('.menu') && 
+            !e.target.closest('.menu-button.entry-menu')) {
             closeAllMenus();
         }
     });
 }
 
-// Menü Setup
+// Menü Funktionen
 function setupMenuHandlers() {
     entryList.addEventListener('click', (e) => {
-        const menuButton = e.target.closest('.menu-button');
+        const menuButton = e.target.closest('.menu-button.entry-menu');
         if (menuButton) {
             e.preventDefault();
             e.stopPropagation();
@@ -607,7 +669,10 @@ function setupMenuHandlers() {
     });
 }
 
-// Menü Funktionen
+function toggleMainMenu() {
+    mainMenuModal.classList.toggle('active');
+}
+
 function toggleMenu(menuButton) {
     const menu = menuButton.nextElementSibling;
     
@@ -631,7 +696,6 @@ function openModal(entry = null) {
     modal.classList.add('active');
     
     if (entry) {
-        // Bearbeiten-Modus
         modalTitle.textContent = 'Eintrag bearbeiten';
         currentEditId = entry.date;
         
@@ -639,29 +703,18 @@ function openModal(entry = null) {
         document.getElementById('date').value = entry.date;
         document.getElementById('startTime').value = entry.startTime;
         document.getElementById('endTime').value = entry.endTime;
+        document.querySelector('.break-start').value = entry.breaks[0].start;
+        document.querySelector('.break-end').value = entry.breaks[0].end;
         document.getElementById('activities').value = entry.activities;
-        
-        // Pausen einfügen
-        breakEntries.innerHTML = '';
-        entry.breaks.forEach(breakItem => {
-            addBreakEntry(breakItem);
-        });
     } else {
-        // Neuer Eintrag
         modalTitle.textContent = 'Neuer Eintrag';
         currentEditId = null;
         form.reset();
         
-        // Standard-Pause zurücksetzen
-        breakEntries.innerHTML = '';
-        addBreakEntry();
-        
-        // Aktuelles Datum setzen
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('date').value = today;
     }
 
-    // Fokussiere erstes Eingabefeld nach Animation
     setTimeout(() => {
         document.getElementById('startTime').focus();
     }, 300);
@@ -671,53 +724,159 @@ function closeModal() {
     modal.classList.remove('active');
     form.reset();
     currentEditId = null;
-    breakEntries.innerHTML = '';
-    addBreakEntry(); // Eine leere Pause hinzufügen
 }
 
-// Pausen-Einträge
-function addBreakEntry(breakData = null) {
-    const breakEntry = document.createElement('div');
-    breakEntry.className = 'break-entry';
-    breakEntry.innerHTML = `
-        <input type="time" class="break-start" required value="${breakData?.start || ''}">
-        <span>-</span>
-        <input type="time" class="break-end" required value="${breakData?.end || ''}">
-        <button type="button" class="remove-break">×</button>
-    `;
-    
-    const removeButton = breakEntry.querySelector('.remove-break');
-    removeButton.addEventListener('click', () => {
-        // Verhindere Löschung wenn es der letzte Eintrag ist
-        if (document.querySelectorAll('.break-entry').length > 1) {
-            breakEntry.remove();
+// Datei Import/Export
+async function handleFileImport(e) {
+    try {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const text = await file.text();
+        const entries = parseImportedText(text);
+        
+        if (entries.length > 0) {
+            const existingEntries = getEntries();
+            const newEntries = mergeEntries(existingEntries, entries);
+            saveEntries(newEntries);
+            renderEntries(newEntries);
+            showToast('Einträge erfolgreich importiert');
+        } else {
+            showToast('Keine gültigen Einträge gefunden', 'error');
         }
+    } catch (error) {
+        console.error('Fehler beim Importieren:', error);
+        showToast('Fehler beim Importieren der Datei', 'error');
+    }
+    
+    // Reset file input
+    e.target.value = '';
+}
+function parseImportedText(text) {
+    try {
+        // Entferne BOM falls vorhanden
+        text = text.replace(/^\uFEFF/, '');
+        
+        // Versuche direkt als JSON zu parsen
+        try {
+            const entries = JSON.parse(text);
+            if (Array.isArray(entries)) return entries;
+        } catch {}
+        
+        // Versuche als formatierte Textdatei zu parsen
+        const entries = [];
+        const lines = text.split('\n');
+        let currentEntry = null;
+        
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (!trimmedLine) continue;
+            
+            // Neuer Eintrag beginnt mit Datum
+            if (trimmedLine.match(/^\d{2}\.\d{2}\.\d{4}/)) {
+                if (currentEntry) entries.push(currentEntry);
+                
+                const [day, month, year] = trimmedLine.split('.');
+                currentEntry = {
+                    date: `${year}-${month}-${day}`,
+                    activities: []
+                };
+            }
+            // Zeiten erkennen (HH:MM - HH:MM)
+            else if (trimmedLine.match(/^\d{2}:\d{2}\s*-\s*\d{2}:\d{2}/)) {
+                const [start, end] = trimmedLine.split('-').map(t => t.trim());
+                if (currentEntry) {
+                    currentEntry.startTime = start;
+                    currentEntry.endTime = end;
+                }
+            }
+            // Pause erkennen
+            else if (trimmedLine.toLowerCase().includes('pause')) {
+                const timeMatch = trimmedLine.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+                if (timeMatch && currentEntry) {
+                    currentEntry.breaks = [{
+                        start: timeMatch[1],
+                        end: timeMatch[2]
+                    }];
+                }
+            }
+            // Rest als Aktivitäten
+            else if (currentEntry) {
+                currentEntry.activities.push(trimmedLine);
+            }
+        }
+        
+        // Letzten Eintrag nicht vergessen
+        if (currentEntry) {
+            currentEntry.activities = currentEntry.activities.join('\n');
+            entries.push(currentEntry);
+        }
+        
+        // Arbeitszeit berechnen für jeden Eintrag
+        return entries.map(entry => {
+            if (!entry.breaks) entry.breaks = [{ start: '12:00', end: '12:30' }];
+            entry.workTime = calculateWorkTime(entry.startTime, entry.endTime, entry.breaks);
+            return entry;
+        });
+        
+    } catch (error) {
+        console.error('Fehler beim Parsen der Datei:', error);
+        return [];
+    }
+}
+
+function mergeEntries(existing, imported) {
+    const merged = [...existing];
+    
+    for (const newEntry of imported) {
+        const existingIndex = merged.findIndex(e => e.date === newEntry.date);
+        if (existingIndex !== -1) {
+            if (confirm(`Eintrag für ${formatDate(newEntry.date)} existiert bereits. Überschreiben?`)) {
+                merged[existingIndex] = newEntry;
+            }
+        } else {
+            merged.push(newEntry);
+        }
+    }
+    
+    return merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function loadPreviousEntries() {
+    const entries = getEntries();
+    const today = new Date();
+    const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate());
+    
+    const previousEntries = entries.filter(entry => {
+        const entryDate = new Date(entry.date);
+        return entryDate < threeMonthsAgo;
     });
     
-    breakEntries.appendChild(breakEntry);
+    if (previousEntries.length === 0) {
+        showToast('Keine älteren Einträge gefunden');
+        return;
+    }
+    
+    renderEntries(previousEntries);
+    showToast(`${previousEntries.length} ältere Einträge geladen`);
+    mainMenuModal.classList.remove('active');
 }
 
-// Zeitberechnung
 function calculateWorkTime(startTime, endTime, breaks) {
-    // Konvertiere Zeiten in Minuten
     const start = timeToMinutes(startTime);
     const end = timeToMinutes(endTime);
     
-    // Berechne Gesamtpausenzeit
     const totalBreakTime = breaks.reduce((total, breakItem) => {
         const breakStart = timeToMinutes(breakItem.start);
         const breakEnd = timeToMinutes(breakItem.end);
         return total + (breakEnd - breakStart);
     }, 0);
     
-    // Berechne Arbeitszeit in Minuten
     const totalMinutes = end - start - totalBreakTime;
     
-    // Konvertiere in Dezimalstunden
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     
-    // Runde auf Viertelstunden
     if (minutes <= 7) return hours.toString();
     if (minutes <= 22) return `${hours},25`;
     if (minutes <= 37) return `${hours},5`;
@@ -725,7 +884,6 @@ function calculateWorkTime(startTime, endTime, breaks) {
     return (hours + 1).toString();
 }
 
-// Hilfsfunktionen
 function timeToMinutes(timeStr) {
     const [hours, minutes] = timeStr.split(':').map(Number);
     return hours * 60 + minutes;
@@ -740,7 +898,6 @@ function formatDate(dateStr) {
     });
 }
 
-// Cookie Funktionen
 function saveEntries(entries) {
     document.cookie = `${COOKIE_NAME}=${JSON.stringify(entries)};max-age=31536000000;path=/;SameSite=Strict`;
 }
@@ -776,7 +933,6 @@ function getEntries() {
     }
 }
 
-// Formular Handler
 async function handleSubmit(e) {
     e.preventDefault();
     
@@ -786,10 +942,10 @@ async function handleSubmit(e) {
             date: document.getElementById('date').value,
             startTime: document.getElementById('startTime').value,
             endTime: document.getElementById('endTime').value,
-            breaks: Array.from(document.querySelectorAll('.break-entry')).map(entry => ({
-                start: entry.querySelector('.break-start').value,
-                end: entry.querySelector('.break-end').value
-            })),
+            breaks: [{
+                start: document.querySelector('.break-start').value,
+                end: document.querySelector('.break-end').value
+            }],
             activities: document.getElementById('activities').value
         };
         
@@ -802,20 +958,18 @@ async function handleSubmit(e) {
             return;
         }
         
-        // Validiere Pausen
-        for (const breakItem of formData.breaks) {
-            const breakStartMin = timeToMinutes(breakItem.start);
-            const breakEndMin = timeToMinutes(breakItem.end);
-            
-            if (breakEndMin <= breakStartMin) {
-                showToast('Die Pausenendzeit muss nach der Pausenstartzeit liegen', 'error');
-                return;
-            }
-            
-            if (breakStartMin < startMinutes || breakEndMin > endMinutes) {
-                showToast('Pausen müssen innerhalb der Arbeitszeit liegen', 'error');
-                return;
-            }
+        // Validiere Pause
+        const breakStartMin = timeToMinutes(formData.breaks[0].start);
+        const breakEndMin = timeToMinutes(formData.breaks[0].end);
+        
+        if (breakEndMin <= breakStartMin) {
+            showToast('Die Pausenendzeit muss nach der Pausenstartzeit liegen', 'error');
+            return;
+        }
+        
+        if (breakStartMin < startMinutes || breakEndMin > endMinutes) {
+            showToast('Die Pause muss innerhalb der Arbeitszeit liegen', 'error');
+            return;
         }
         
         // Berechne Arbeitszeit
@@ -867,7 +1021,7 @@ function renderEntries(entries) {
                 <span class="date">${formatDate(entry.date)}</span>
                 <div class="actions">
                     <span class="work-time">${entry.workTime} Std</span>
-                    <button class="menu-button">⋮</button>
+                    <button class="menu-button entry-menu">⋮</button>
                     <div class="menu">
                         <button class="menu-item edit">Bearbeiten</button>
                         <button class="menu-item delete">Löschen</button>
@@ -877,9 +1031,7 @@ function renderEntries(entries) {
             <div class="card-content">
                 <div class="times">
                     <span class="time">${entry.startTime} - ${entry.endTime}</span>
-                    ${entry.breaks.map(breakItem => 
-                        `<span class="break">Pause: ${breakItem.start} - ${breakItem.end}</span>`
-                    ).join('')}
+                    <span class="break">Pause: ${entry.breaks[0].start} - ${entry.breaks[0].end}</span>
                 </div>
                 <p class="activities">${entry.activities}</p>
             </div>
@@ -889,6 +1041,21 @@ function renderEntries(entries) {
             <p>Keine Einträge vorhanden</p>
         </div>
     `;
+}
+
+// Toast Notifications
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease-out';
+        toast.addEventListener('animationend', () => {
+            toast.remove();
+        }, { once: true });
+    }, 3000);
 }
 
 // Bearbeiten & Löschen
@@ -920,21 +1087,7 @@ function handleDelete(card) {
         }, { once: true });
     }
 }
-
-// Toast Notifications
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.animation = 'fadeOut 0.3s ease-out';
-        toast.addEventListener('animationend', () => {
-            toast.remove();
-        }, { once: true });
-    }, 3000);
-}
     </script>
+    <!-- JavaScript HIER EINFÜGEN - Ende -->
 </body>
 </html>
