@@ -46,39 +46,6 @@ body {
              env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-/* Cookie-Hinweis */
-.cookie-notice {
-    position: fixed;
-    bottom: calc(5rem + env(safe-area-inset-bottom));
-    left: 50%;
-    transform: translate(-50%, 150%);
-    background-color: var(--card-bg);
-    padding: 1rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    z-index: 1000;
-    transition: transform 0.3s ease-out;
-    border: 1px solid var(--border);
-    width: 90%;
-    max-width: 400px;
-}
-
-.cookie-notice.show {
-    transform: translate(-50%, 0);
-}
-
-.cookie-notice button {
-    margin-top: 1rem;
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    padding: 0.5rem 2rem;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
 /* Header Styles */
 .header {
     position: fixed;
@@ -101,7 +68,7 @@ body {
     font-weight: 600;
     flex: 1;
     text-align: center;
-    margin-right: 44px; /* Ausgleich für Menü-Button */
+    margin-right: 44px;
 }
 
 /* Hauptmenü Button */
@@ -387,7 +354,7 @@ textarea:focus {
 }
 
 textarea {
-    height: 100px;
+    height: 120px;
     resize: vertical;
     line-height: 1.5;
 }
@@ -463,7 +430,7 @@ button:active {
 /* Toast Container */
 #toastContainer {
     position: fixed;
-    bottom: calc(5rem + env(safe-area-inset-bottom));
+    top: calc(4rem + env(safe-area-inset-top));
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
@@ -472,6 +439,8 @@ button:active {
     align-items: center;
     gap: 0.5rem;
     pointer-events: none;
+    width: 90%;
+    max-width: 500px;
 }
 
 .toast {
@@ -480,9 +449,11 @@ button:active {
     padding: 0.75rem 1.5rem;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    animation: fadeIn 0.2s ease-out;
+    animation: slideInTop 0.3s ease-out;
     border: 1px solid var(--border);
     pointer-events: auto;
+    width: 100%;
+    text-align: center;
 }
 
 .toast.error {
@@ -494,6 +465,17 @@ button:active {
 @keyframes slideIn {
     from {
         transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInTop {
+    from {
+        transform: translateY(-20px);
         opacity: 0;
     }
     to {
@@ -571,12 +553,6 @@ button:active {
             <button class="menu-item import-entries">Berichtsheft importieren</button>
             <input type="file" id="fileInput" accept=".txt" style="display: none;">
         </div>
-    </div>
-
-    <!-- Cookie-Warnung -->
-    <div class="cookie-notice" id="cookieNotice">
-        <p>Diese App speichert Ihre Einträge lokal in Cookies.</p>
-        <button id="acceptCookies">OK</button>
     </div>
 
     <!-- Eintrags-Liste -->
@@ -665,7 +641,6 @@ button:active {
     <script>
 // Konstanten für Cookie-Handling und DOM-Elemente
 const COOKIE_NAME = 'berichtsheft_entries';
-const COOKIE_NOTICE = 'berichtsheft_notice_accepted';
 
 // DOM-Elemente
 const modal = document.getElementById('entryModal');
@@ -678,31 +653,18 @@ const mainMenuButton = document.querySelector('.menu-button.main-menu');
 const mainMenuModal = document.querySelector('.main-menu-modal');
 const importButton = document.querySelector('.import-entries');
 const fileInput = document.getElementById('fileInput');
-const cookieNotice = document.getElementById('cookieNotice');
-const acceptCookiesButton = document.getElementById('acceptCookies');
 const entryTemplate = document.getElementById('entryTemplate');
 
+// Globale Variablen
 let currentEditId = null;
 let activeMenu = null;
+let entries = []; // Zentrale Datenspeicherung
 
-// Event Listeners
+// Initial Setup
 document.addEventListener('DOMContentLoaded', () => {
-    checkCookieNotice();
     loadEntries();
     setupEventListeners();
     setupMenuHandlers();
-});
-
-// Cookie Notice Handler
-function checkCookieNotice() {
-    if (!getCookie(COOKIE_NOTICE)) {
-        cookieNotice.classList.add('show');
-    }
-}
-
-acceptCookiesButton.addEventListener('click', () => {
-    document.cookie = `${COOKIE_NOTICE}=true;max-age=31536000000;path=/;SameSite=Strict`;
-    cookieNotice.classList.remove('show');
 });
 
 // Event Listener Setup
@@ -718,17 +680,20 @@ function setupEventListeners() {
     
     // Schließe Menüs wenn außerhalb geklickt wird
     document.addEventListener('click', (e) => {
-        // Hauptmenü schließen
         if (!e.target.closest('.main-menu-modal') && 
             !e.target.closest('.menu-button.main-menu')) {
             mainMenuModal.classList.remove('active');
         }
         
-        // Eintrags-Menüs schließen
         if (!e.target.closest('.menu') && 
             !e.target.closest('.menu-button.entry-menu')) {
             closeAllMenus();
         }
+    });
+
+    // Speichere Einträge bei Browserschließung
+    window.addEventListener('beforeunload', () => {
+        saveEntries(entries);
     });
 }
 
@@ -761,6 +726,7 @@ function setupMenuHandlers() {
     });
 }
 
+// Menü Funktionen
 function toggleMainMenu() {
     mainMenuModal.classList.toggle('active');
 }
@@ -818,53 +784,7 @@ function closeModal() {
     currentEditId = null;
 }
 
-// Toast Notification System
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    document.getElementById('toastContainer').appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.animation = 'fadeOut 0.3s ease-out';
-        toast.addEventListener('animationend', () => toast.remove(), { once: true });
-    }, 3000);
-}
-// Cookie Funktionen
-function getCookie(name) {
-    return document.cookie
-        .split('; ')
-        .find(row => row.startsWith(name))
-        ?.split('=')[1];
-}
-
-function saveEntries(entries) {
-    document.cookie = `${COOKIE_NAME}=${JSON.stringify(entries)};max-age=31536000000;path=/;SameSite=Strict`;
-}
-
-function loadEntries() {
-    try {
-        const cookieData = getCookie(COOKIE_NAME);
-        const entries = cookieData ? JSON.parse(cookieData) : [];
-        renderEntries(entries);
-    } catch (error) {
-        console.error('Fehler beim Laden der Einträge:', error);
-        showToast('Fehler beim Laden der Einträge', 'error');
-        renderEntries([]);
-    }
-}
-
-function getEntries() {
-    try {
-        const cookieData = getCookie(COOKIE_NAME);
-        return cookieData ? JSON.parse(cookieData) : [];
-    } catch (error) {
-        console.error('Fehler beim Abrufen der Einträge:', error);
-        return [];
-    }
-}
-
-// Datei Import
+// Cookie und Datei Import
 async function handleFileImport(e) {
     try {
         const file = e.target.files[0];
@@ -877,21 +797,34 @@ async function handleFileImport(e) {
             throw new Error('Ungültiges Dateiformat');
         }
 
-        const existingEntries = getEntries();
-        const mergedEntries = mergeEntries(existingEntries, importedEntries);
+        // Merge und speichere die Einträge
+        entries = mergeEntries(entries, importedEntries);
+        saveEntries(entries);
+        renderEntries();
         
-        saveEntries(mergedEntries);
-        renderEntries(mergedEntries);
-        showToast('Einträge erfolgreich importiert');
+        showToast(`${importedEntries.length} Einträge erfolgreich importiert`);
+        mainMenuModal.classList.remove('active');
     } catch (error) {
         console.error('Fehler beim Importieren:', error);
         showToast('Fehler beim Importieren der Datei', 'error');
     }
     
-    // Reset file input
-    e.target.value = '';
+    fileInput.value = '';
 }
 
+// Toast Notification System
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    document.getElementById('toastContainer').appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease-out';
+        toast.addEventListener('animationend', () => toast.remove(), { once: true });
+    }, 3000);
+}
+// Daten Management
 function mergeEntries(existing, imported) {
     const merged = [...existing];
     let updates = 0;
@@ -900,26 +833,64 @@ function mergeEntries(existing, imported) {
     for (const newEntry of imported) {
         const existingIndex = merged.findIndex(e => e.date === newEntry.date);
         if (existingIndex !== -1) {
-            merged[existingIndex] = newEntry;
+            merged[existingIndex] = {
+                ...merged[existingIndex],
+                ...newEntry,
+                isImported: true
+            };
             updates++;
         } else {
-            merged.push(newEntry);
+            merged.push({
+                ...newEntry,
+                isImported: true
+            });
             additions++;
         }
     }
     
-    // Sortiere nach Datum (neueste zuerst)
-    const sortedEntries = merged.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    // Zeige Zusammenfassung, wenn Änderungen vorgenommen wurden
-    if (updates > 0 || additions > 0) {
-        const summary = [];
-        if (additions > 0) summary.push(`${additions} neue Einträge`);
-        if (updates > 0) summary.push(`${updates} aktualisierte Einträge`);
-        showToast(summary.join(', '));
+    return merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+// Cookie Funktionen
+function saveEntries(entriesToSave) {
+    try {
+        const saveData = JSON.stringify(entriesToSave);
+        localStorage.setItem(COOKIE_NAME, saveData);
+        document.cookie = `${COOKIE_NAME}=${saveData};max-age=31536000000;path=/;SameSite=Strict`;
+    } catch (error) {
+        console.error('Fehler beim Speichern:', error);
+        showToast('Fehler beim Speichern der Einträge', 'error');
     }
-    
-    return sortedEntries;
+}
+
+function loadEntries() {
+    try {
+        // Versuche zuerst aus localStorage zu laden
+        let loadedEntries = localStorage.getItem(COOKIE_NAME);
+        
+        // Falls nicht in localStorage, versuche Cookies
+        if (!loadedEntries) {
+            const cookie = document.cookie
+                .split('; ')
+                .find(row => row.startsWith(COOKIE_NAME));
+                
+            loadedEntries = cookie ? cookie.split('=')[1] : null;
+        }
+        
+        // Parse und setze die Einträge
+        if (loadedEntries) {
+            entries = JSON.parse(loadedEntries);
+            renderEntries();
+        } else {
+            entries = [];
+            renderEntries();
+        }
+    } catch (error) {
+        console.error('Fehler beim Laden der Einträge:', error);
+        showToast('Fehler beim Laden der Einträge', 'error');
+        entries = [];
+        renderEntries();
+    }
 }
 
 // Formular Handler
@@ -968,14 +939,14 @@ async function handleSubmit(e) {
             formData.breaks
         );
         
-        // Speichere Eintrag
-        const entries = getEntries();
-        
         if (currentEditId) {
             // Bearbeitung: Ersetze existierenden Eintrag
             const index = entries.findIndex(entry => entry.date === currentEditId);
             if (index !== -1) {
-                entries[index] = formData;
+                entries[index] = {
+                    ...entries[index],
+                    ...formData
+                };
             }
         } else {
             // Neuer Eintrag: Prüfe auf Duplikate
@@ -986,12 +957,12 @@ async function handleSubmit(e) {
                 }
                 entries[existingEntryIndex] = formData;
             } else {
-                entries.unshift(formData); // Neuster Eintrag zuerst
+                entries.unshift(formData);
             }
         }
         
         saveEntries(entries);
-        renderEntries(entries);
+        renderEntries();
         closeModal();
         
         showToast('Eintrag gespeichert');
@@ -1007,9 +978,15 @@ function calculateWorkTime(startTime, endTime, breaks) {
     const start = timeToMinutes(startTime);
     const end = timeToMinutes(endTime);
     
+    // Wenn Start- oder Endzeit 00:00 ist, gib 0 zurück
+    if (start === 0 && end === 0) return "0";
+    
     const totalBreakTime = breaks.reduce((total, breakItem) => {
         const breakStart = timeToMinutes(breakItem.start);
         const breakEnd = timeToMinutes(breakItem.end);
+        
+        // Wenn Pausenzeit 00:00 ist, keine Pause berechnen
+        if (breakStart === 0 && breakEnd === 0) return total;
         return total + (breakEnd - breakStart);
     }, 0);
     
@@ -1030,8 +1007,7 @@ function timeToMinutes(timeStr) {
 }
 
 function formatDate(dateStr) {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('de-DE', {
+    return new Date(dateStr).toLocaleDateString('de-DE', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
@@ -1039,9 +1015,9 @@ function formatDate(dateStr) {
 }
 
 // UI Rendering
-function renderEntries(entries) {
+function renderEntries() {
     const hasEntries = entries.length > 0;
-    entryList.innerHTML = ''; // Liste leeren
+    entryList.innerHTML = '';
     
     if (hasEntries) {
         const fragment = document.createDocumentFragment();
@@ -1060,8 +1036,7 @@ function renderEntries(entries) {
 }
 
 function createEntryCard(entry) {
-    const template = document.getElementById('entryTemplate');
-    const card = template.content.cloneNode(true).children[0];
+    const card = entryTemplate.content.cloneNode(true).children[0];
     
     card.dataset.date = entry.date;
     card.querySelector('.date').textContent = formatDate(entry.date);
@@ -1076,7 +1051,6 @@ function createEntryCard(entry) {
 // Bearbeiten & Löschen
 function handleEdit(card) {
     const dateToEdit = card.dataset.date;
-    const entries = getEntries();
     const entry = entries.find(e => e.date === dateToEdit);
     if (entry) {
         openModal(entry);
@@ -1085,14 +1059,13 @@ function handleEdit(card) {
 
 function handleDelete(card) {
     if (confirm('Eintrag wirklich löschen?')) {
-        const entries = getEntries();
         const dateToDelete = card.dataset.date;
-        const updatedEntries = entries.filter(entry => entry.date !== dateToDelete);
+        entries = entries.filter(entry => entry.date !== dateToDelete);
         
         card.style.animation = 'slideOut 0.3s ease-out';
         card.addEventListener('animationend', () => {
-            saveEntries(updatedEntries);
-            renderEntries(updatedEntries);
+            saveEntries(entries);
+            renderEntries();
             showToast('Eintrag gelöscht');
         }, { once: true });
     }
